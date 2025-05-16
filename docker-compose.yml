@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database for NestJS Backend
+  postgres:
+    image: postgres:14
+    container_name: jarvis-postgres-nestjs
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: jarvis_nestjs
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - nestjs-network
+
+  # NestJS Backend
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jarvis-nestjs-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=development
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_NAME=jarvis_nestjs
+      - JWT_SECRET=83e47ec9b1db70dd8cebdaafb3ceadd0ddca6dbf0706bd571f1d9bfbc504cd90
+      - PYTHON_BACKEND_URL=http://localhost:8000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - nestjs-network
+
+networks:
+  nestjs-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
