@@ -12,17 +12,17 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    
+
     if (!requiredRoles) {
       return true;
     }
-    
+
     const { user } = context.switchToHttp().getRequest();
-    
+
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
-    
+
     // For ADMIN role, allow all actions
     if (user.role === UserRole.ADMIN) {
       return true;
@@ -32,8 +32,8 @@ export class RolesGuard implements CanActivate {
     if (user.role === UserRole.EDITOR) {
       return requiredRoles.some(role => role === UserRole.VIEWER || role === UserRole.EDITOR);
     }
-    
+
     // For VIEWER role, allow only if action requires VIEWER
-    return requiredRoles.some(role => role === UserRole.VIEWER);
+    return requiredRoles.some(role => role === UserRole.ADMIN);
   }
 }

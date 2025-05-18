@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
+import { Injectable, NotFoundException, ConflictException, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
@@ -10,12 +10,14 @@ import { UserRole } from "./enums/user-role.enum";
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>
   ) {}
 
-  async create(createUserDto: CreateUserDto, role: UserRole = UserRole.VIEWER): Promise<User> {
+  async create(createUserDto: CreateUserDto, role: UserRole = UserRole.ADMIN): Promise<User> {
     // Check if user with the same email or username already exists
     const existingUser = await this.usersRepository.findOne({
       where: [{ email: createUserDto.email }, { username: createUserDto.username }],
@@ -32,7 +34,7 @@ export class UsersService {
     const user = this.usersRepository.create({
       ...createUserDto,
       password: hashedPassword,
-      role,
+      role
     });
 
     return this.usersRepository.save(user);
@@ -59,12 +61,15 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    this.logger.log(`Updating user with ID: ${id}, DTO: ${JSON.stringify(updateUserDto)}`);
+
     const user = await this.findOne(id);
+    this.logger.log(`Found user: ${JSON.stringify(user)}`);
 
     // If email or username is being updated, check for conflicts
     if (updateUserDto.email || updateUserDto.username) {
       const existingUser = await this.usersRepository.findOne({
-        where: [{ email: updateUserDto.email }, { username: updateUserDto.username }],
+        where: [...(updateUserDto.email ? [{ email: updateUserDto.email }] : []), ...(updateUserDto.username ? [{ username: updateUserDto.username }] : [])],
       });
 
       if (existingUser && existingUser.id !== id) {
@@ -77,9 +82,30 @@ export class UsersService {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
 
-    // Update user
-    Object.assign(user, updateUserDto);
-    return this.usersRepository.save(user);
+    // Update user - explicitly create an object with only the fields that are changing
+    this.logger.log(`Before update: ${JSON.stringify(user)}`);
+
+    // Create a clean update object with only the properties that are being updated
+    const updateData = {};
+    if (updateUserDto.username) updateData["username"] = updateUserDto.username;
+    if (updateUserDto.email) updateData["email"] = updateUserDto.email;
+    if (updateUserDto.password) updateData["password"] = updateUserDto.password;
+    if (updateUserDto.role) updateData["role"] = updateUserDto.role;
+
+    // Apply the changes
+    Object.assign(user, updateData);
+    this.logger.log(`After update with Object.assign: ${JSON.stringify(user)}`);
+    this.logger.log(`Update data being applied: ${JSON.stringify(updateData)}`);
+
+    try {
+      // Use save method with explicit entity
+      const result = await this.usersRepository.save(user);
+      this.logger.log(`Save result: ${JSON.stringify(result)}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error saving user: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   async remove(id: string): Promise<void> {
