@@ -50,7 +50,7 @@ export class AuthService {
   }
 
   async register(createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto, UserRole.VIEWER);
+    const user = await this.usersService.create(createUserDto, UserRole.ADMIN);
 
     const payload = { sub: user.id, email: user.email, username: user.username, role: user.role };
 
@@ -67,6 +67,8 @@ export class AuthService {
 
   async validateToken(token: string) {
     try {
+      // The JwtStrategy already handles verification and user validation
+      // This method is kept for backward compatibility
       const payload = this.jwtService.verify(token);
       const user = await this.usersService.findOne(payload.sub);
 
