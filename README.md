@@ -130,9 +130,19 @@ nestjs-backend/
 
 ## API Documentation
 
-Once the application is running, API documentation is available at:
+The NestJS backend provides comprehensive Swagger API documentation. Once the application is running, you can access it at:
 
 - Swagger UI: <http://localhost:3000/api/docs>
+
+This interactive documentation allows you to:
+
+1. Browse all available endpoints
+2. Authenticate using JWT tokens
+3. Test endpoints directly from the browser
+4. View request/response models and schemas
+5. Understand authentication requirements for each endpoint
+
+For a static version of the API documentation, you can use the `generate_api_docs.sh` script in the jarvis-setup repository.
 
 ## Development
 
