@@ -1,6 +1,6 @@
-# NestJS Backend for User and Document Management
+# jarvis-backend: NestJS Backend for User and Document Management
 
-This component handles user authentication, document management, and ingestion controls.
+This component ([GitHub repository](https://github.com/raks07/jarvis-backend)) handles user authentication, document management, and ingestion controls.
 
 ## Features
 
@@ -8,7 +8,7 @@ This component handles user authentication, document management, and ingestion c
 - Role-based access control
 - Document management (upload, retrieve, delete)
 - Ingestion process management
-- Integration with Python backend for document ingestion
+- Integration with jarvis-datastore for document ingestion
 
 ## Technology Stack
 
